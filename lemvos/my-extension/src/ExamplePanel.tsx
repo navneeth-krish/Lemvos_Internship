@@ -1,6 +1,8 @@
 import { PanelExtensionContext, MessageEvent } from "@foxglove/studio";
+import { ObcTopBar } from "@oicl/openbridge-webcomponents-react/components/top-bar/top-bar";
 import { useEffect, useLayoutEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
+import "@oicl/openbridge-webcomponents/src/palettes/variables.css";
 import "./App.css";
 
 // Type definitions for our data
@@ -133,7 +135,11 @@ function OpenBridgePanel({ context }: { context: PanelExtensionContext }) {
   const [demoMode, setDemoMode] = useState(true);
   const [isAnimating, setIsAnimating] = useState(true);
   const [useRadians, setUseRadians] = useState(false);
+  const [showBrillianceMenu, setShowBrillianceMenu] = useState(false);
 
+  const handleDimmingButtonClicked = () => {
+    setShowBrillianceMenu(!showBrillianceMenu);
+  };
   // Subscribe to topics
   useLayoutEffect(() => {
     context.subscribe([
@@ -236,6 +242,15 @@ function OpenBridgePanel({ context }: { context: PanelExtensionContext }) {
 
   return (
     <div className="openbridge-panel">
+      <header>
+        <ObcTopBar
+          appTitle="React"
+          pageName="Demo"
+          showDimmingButton
+          showAppsButton
+          onDimmingButtonClicked={handleDimmingButtonClicked}
+        />
+      </header>
       {/* Header */}
       <div className="panel-header">
         <h2>OpenBridge Marine Control</h2>
