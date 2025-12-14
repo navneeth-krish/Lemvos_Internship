@@ -1,0 +1,58 @@
+diff --git a/node_modules/@oicl/openbridge-webcomponents/dist/components/breadcrumb/breadcrumb.js b/node_modules/@oicl/openbridge-webcomponents/dist/components/breadcrumb/breadcrumb.js
+index 8b4e8f6..f0a5959 100644
+--- a/node_modules/@oicl/openbridge-webcomponents/dist/components/breadcrumb/breadcrumb.js
++++ b/node_modules/@oicl/openbridge-webcomponents/dist/components/breadcrumb/breadcrumb.js
+@@ -1,7 +1,7 @@
+ import { unsafeCSS, LitElement, html } from "lit";
+ import { property, customElement } from "lit/decorators.js";
+ import compentStyle from "./breadcrumb.css.js";
+-import "../../icons/icon-chevron-right-google";
++import "../../icons/icon-chevron-right-google.js";
+ var __defProp = Object.defineProperty;
+ var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+ var __decorateClass = (decorators, target, key, kind) => {
+diff --git a/node_modules/@oicl/openbridge-webcomponents/dist/components/clock/clock.js b/node_modules/@oicl/openbridge-webcomponents/dist/components/clock/clock.js
+index 7c37401..82b86a5 100644
+--- a/node_modules/@oicl/openbridge-webcomponents/dist/components/clock/clock.js
++++ b/node_modules/@oicl/openbridge-webcomponents/dist/components/clock/clock.js
+@@ -1,6 +1,6 @@
+ import { unsafeCSS, LitElement, html } from "lit";
+ import { property, customElement } from "lit/decorators.js";
+-import "../icon-button/icon-button";
++import "../icon-button/icon-button.js";
+ import compentStyle from "./clock.css.js";
+ var __defProp = Object.defineProperty;
+ var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+diff --git a/node_modules/@oicl/openbridge-webcomponents/dist/components/top-bar/top-bar.js b/node_modules/@oicl/openbridge-webcomponents/dist/components/top-bar/top-bar.js
+index 7f2f3ae..319d244 100644
+--- a/node_modules/@oicl/openbridge-webcomponents/dist/components/top-bar/top-bar.js
++++ b/node_modules/@oicl/openbridge-webcomponents/dist/components/top-bar/top-bar.js
+@@ -2,17 +2,17 @@ import { unsafeCSS, LitElement, html } from "lit";
+ import { property, customElement } from "lit/decorators.js";
+ import { classMap } from "lit/directives/class-map.js";
+ import compentStyle from "./top-bar.css.js";
+-import "../icon-button/icon-button";
+-import "../clock/clock";
+-import "../divider/divider";
+-import "../breadcrumb/breadcrumb";
+-import "../../icons/icon-menu-iec";
+-import "../../icons/icon-close-google";
+-import "../../icons/icon-arrow-left-google";
+-import "../../icons/icon-arrow-right-google";
+-import "../../icons/icon-palette-day-night-iec";
+-import "../../icons/icon-applications";
+-import "../../icons/icon-more-vertical-google";
++import "../icon-button/icon-button.js";
++import "../clock/clock.js";
++import "../divider/divider.js";
++import "../breadcrumb/breadcrumb.js";
++import "../../icons/icon-menu-iec.js";
++import "../../icons/icon-close-google.js";
++import "../../icons/icon-arrow-left-google.js";
++import "../../icons/icon-arrow-right-google.js";
++import "../../icons/icon-palette-day-night-iec.js";
++import "../../icons/icon-applications.js";
++import "../../icons/icon-more-vertical-google.js";
+ var __defProp = Object.defineProperty;
+ var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+ var __decorateClass = (decorators, target, key, kind) => {

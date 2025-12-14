@@ -1,15 +1,150 @@
 import { PanelExtensionContext } from "@foxglove/studio";
 import { ObcTopBar } from "@oicl/openbridge-webcomponents-react/components/top-bar/top-bar";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { createRoot } from "react-dom/client";
 
+// Import the web components directly
+import "@oicl/openbridge-webcomponents/dist/automation/automation-button/automation-button.js";
+import "@oicl/openbridge-webcomponents/dist/navigation-instruments/azimuth-thruster/azimuth-thruster.js";
 import "@oicl/openbridge-webcomponents/src/palettes/variables.css";
 import "./App.css";
 import { ObcNavigationMenu } from "./components/navigation_menu";
 
-function OpenBridgePanel() {
+// Declare the custom elements for TypeScript
+interface CustomElement extends HTMLElement {
+  angle: number;
+  value?: number;
+}
+
+declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
+  namespace JSX {
+    interface IntrinsicElements {
+      "obc-automation-button": {
+        label?: string;
+        className?: string;
+      };
+      "obc-azimuth-thruster": {
+        angle?: number;
+        value?: number;
+        ref?: React.Ref<CustomElement>;
+        className?: string;
+      };
+    }
+  }
+}
+
+// Type definitions for message data
+interface ThrusterMessage {
+  angle?: number;
+  rpm?: number;
+}
+
+interface AutomationMessage {
+  enabled?: boolean;
+  mode?: string;
+}
+
+// Topics we want to subscribe to
+const topics = ["/navigation/thruster/angle", "/navigation/thruster/rpm", "/automation/state"];
+
+function OpenBridgePanel({ context }: { context: PanelExtensionContext }) {
   const [showBrillianceMenu, setShowBrillianceMenu] = useState(false);
   const [showNavigationMenu, setShowNavigationMenu] = useState(false);
+
+  // Component state
+  const [thrusterAngle, setThrusterAngle] = useState(0);
+  const [thrusterRpm, setThrusterRpm] = useState(0);
+  const [automationEnabled, setAutomationEnabled] = useState(false);
+  const [demoMode, setDemoMode] = useState(true); // Start in demo mode
+  const [useRadians, setUseRadians] = useState(false); // Unit switching
+
+  // Refs for direct DOM manipulation
+  const thrusterRef = useRef<CustomElement | null>(null);
+
+  // Set the OpenBridge theme on mount
+  useEffect(() => {
+    document.documentElement.setAttribute("data-obc-theme", "night");
+
+    // Subscribe to topics using the new API
+    context.subscribe(
+      topics.map((topic) => ({
+        topic,
+      })),
+    );
+
+    // Watch for render events
+    context.onRender = (renderState, done) => {
+      // Check if we have any messages
+      if (renderState.currentFrame != null && renderState.currentFrame.length > 0) {
+        setDemoMode(false); // Switch off demo mode when real data arrives
+
+        renderState.currentFrame.forEach((message) => {
+          const topic = message.topic;
+          const data = message.message;
+
+          if (topic === "/navigation/thruster/angle") {
+            const thrusterData = data as ThrusterMessage;
+            setThrusterAngle(thrusterData.angle ?? 0);
+          } else if (topic === "/navigation/thruster/rpm") {
+            const thrusterData = data as ThrusterMessage;
+            setThrusterRpm(thrusterData.rpm ?? 0);
+          } else if (topic === "/automation/state") {
+            const automationData = data as AutomationMessage;
+            setAutomationEnabled(automationData.enabled ?? false);
+          }
+        });
+      }
+
+      done();
+    };
+
+    // Set initial state
+    context.watch("topics");
+    context.watch("currentFrame");
+  }, [context]);
+
+  // Demo mode: Animate instruments when no real data is present
+  useEffect(() => {
+    if (!demoMode) {
+      return;
+    }
+
+    let animationFrame: number;
+    const startTime = Date.now();
+
+    const animate = () => {
+      const elapsed = (Date.now() - startTime) / 1000; // seconds
+
+      // Simulate smooth thruster rotation
+      const newAngle = (elapsed * 20) % 360; // 20 degrees per second
+      setThrusterAngle(newAngle);
+
+      // Simulate RPM with sine wave
+      const newRpm = 50 + Math.sin(elapsed) * 30;
+      setThrusterRpm(Math.max(0, newRpm));
+
+      // Toggle automation every 5 seconds
+      setAutomationEnabled(Math.floor(elapsed / 5) % 2 === 0);
+
+      animationFrame = requestAnimationFrame(animate);
+    };
+
+    animate();
+
+    return () => {
+      if (animationFrame !== 0) {
+        cancelAnimationFrame(animationFrame);
+      }
+    };
+  }, [demoMode]);
+
+  // Update thruster element directly when angle changes
+  useEffect(() => {
+    if (thrusterRef.current != null) {
+      thrusterRef.current.angle = useRadians ? (thrusterAngle * Math.PI) / 180 : thrusterAngle;
+    }
+  }, [thrusterAngle, useRadians]);
 
   const handleDimmingButtonClicked = () => {
     setShowBrillianceMenu(!showBrillianceMenu);
@@ -19,30 +154,145 @@ function OpenBridgePanel() {
     setShowNavigationMenu(!showNavigationMenu);
   };
 
+  const toggleUnits = () => {
+    setUseRadians(!useRadians);
+  };
+
+  const toggleDemoMode = () => {
+    setDemoMode(!demoMode);
+  };
+
+  // Format angle based on unit preference
+  const formatAngle = (angle: number): string => {
+    if (useRadians) {
+      return `${((angle * Math.PI) / 180).toFixed(2)} rad`;
+    }
+    return `${Math.round(angle)}°`;
+  };
+
   return (
     <div className="openbridge-panel">
       <header>
         <ObcTopBar
-          appTitle="React"
-          pageName="Demo"
+          appTitle="OpenBridge"
+          pageName="Demo Panel"
           showDimmingButton
           showAppsButton
           onDimmingButtonClicked={handleDimmingButtonClicked}
           onAppsButtonClicked={handleAppsButtonClicked}
         />
       </header>
+
       {showNavigationMenu && (
         <div className="navigation-menu-container">
           <ObcNavigationMenu />
         </div>
       )}
+
+      <main className="panel-content">
+        {/* Control Panel */}
+        <div className="control-panel">
+          <div className="control-group">
+            <button
+              className={`control-button ${demoMode ? "active" : ""}`}
+              onClick={toggleDemoMode}
+            >
+              {demoMode ? "🎬 Demo Mode: ON" : "📡 Live Data Mode"}
+            </button>
+            <button className="control-button" onClick={toggleUnits}>
+              Units: {useRadians ? "Radians" : "Degrees"}
+            </button>
+          </div>
+          {demoMode && (
+            <p className="demo-notice">
+              📊 Demo mode active - Instruments are being animated automatically
+            </p>
+          )}
+        </div>
+
+        {/* Components Demo */}
+        <div className="components-demo">
+          {/* Automation Control Section */}
+          <section className="automation-section">
+            <h3>⚙️ Automation Control</h3>
+            <div className="component-wrapper">
+              <div className="obc-size-large">
+                <obc-automation-button
+                  label={automationEnabled ? "Auto Pilot: ON" : "Auto Pilot: OFF"}
+                />
+              </div>
+              <p className="component-description">
+                Status: {automationEnabled ? "✅ Enabled" : "❌ Disabled"}
+                {demoMode && " (Toggling every 5s)"}
+              </p>
+            </div>
+          </section>
+
+          {/* Azimuth Thruster Section */}
+          <section className="thruster-section">
+            <h3>🚢 Azimuth Thruster</h3>
+            <div className="component-wrapper">
+              <div className="obc-size-large">
+                <obc-azimuth-thruster
+                  ref={thrusterRef}
+                  angle={useRadians ? (thrusterAngle * Math.PI) / 180 : thrusterAngle}
+                />
+              </div>
+              <div className="thruster-data">
+                <div className="data-item">
+                  <span className="data-label">Angle:</span>
+                  <span className="data-value">{formatAngle(thrusterAngle)}</span>
+                </div>
+                <div className="data-item">
+                  <span className="data-label">RPM:</span>
+                  <span className="data-value">{Math.round(thrusterRpm)}</span>
+                </div>
+              </div>
+            </div>
+            <div className="controls">
+              <label>
+                Manual RPM Control:
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={thrusterRpm}
+                  disabled={demoMode}
+                  onChange={(e) => {
+                    setThrusterRpm(Number(e.target.value));
+                  }}
+                />
+                {Math.round(thrusterRpm)}%
+              </label>
+              {demoMode && (
+                <p className="control-note">Disable demo mode to manually control RPM</p>
+              )}
+            </div>
+          </section>
+
+          {/* Topic Subscriptions Info */}
+          <section className="info-section">
+            <h3>📡 Topic Subscriptions</h3>
+            <div className="topics-list">
+              {topics.map((topic) => (
+                <div key={topic} className="topic-item">
+                  <span className="topic-name">{topic}</span>
+                  <span className={`topic-status ${demoMode ? "simulated" : "active"}`}>
+                    {demoMode ? "Simulated" : "Subscribed"}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </section>
+        </div>
+      </main>
     </div>
   );
 }
 
 export function initOpenBridgePanel(context: PanelExtensionContext): () => void {
   const root = createRoot(context.panelElement);
-  root.render(<OpenBridgePanel />);
+  root.render(<OpenBridgePanel context={context} />);
 
   return () => {
     root.unmount();
