@@ -8,15 +8,6 @@
   overflow: auto;
 }
 
-@font-face {
-  font-family: "Noto Sans";
-  src: url("path/to/NotoSans.tff");
-}
-
-* {
-  font-family: Noto Sans;
-}
-
 .panel-header {
   display: flex;
   justify-content: space-between;
