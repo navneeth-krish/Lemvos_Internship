@@ -1,39 +1,52 @@
-# my-extension
+# OpenBridge Foxglove Extension
 
-[Foxglove](https://foxglove.dev) allows developers to create [extensions](https://docs.foxglove.dev/docs/visualization/extensions/introduction), or custom code that is loaded and executed inside the Foxglove application. This can be used to add custom panels. Extensions are authored in TypeScript using the `@foxglove/extension` SDK.
+This extension integrates [OpenBridge Web Components](https://github.com/Ocean-Industries-Concept-Lab/openbridge-webcomponents) into [Foxglove Studio](https://foxglove.dev/).
 
-## Develop
+## Features
 
-Extension development uses the `npm` package manager to install development dependencies and run build scripts.
+-   **OpenBridge Design System**: Uses the official `night` theme and components.
+-   **Integrated Components**:
+    1.  **Top Bar**: Official `ObcTopBar`.
+    2.  **Navigation Menu**: Official `ObcNavigationMenu`.
+    3.  **Azimuth Thruster**: Official `obc-azimuth-thruster` visualization.
+    4.  **Automation Control**: Official `obc-automation-button`.
+    5.  **Pitch & Roll**: Custom implementation of an artificial horizon (official component unavailable in current package version).
+-   **Data Binding**: Subscribes to Foxglove topics for real-time updates.
+-   **Demo Mode**: Automatically animates instruments if no real data is present.
+-   **Unit Switching**: Toggle between Degrees and Radians.
 
-To install extension dependencies, run `npm` from the root of the extension package.
+## Build & Install
 
-```sh
-npm install
-```
+### Prerequisites
+-   Node.js (v16+)
+-   npm
 
-To build and install the extension into your local Foxglove desktop app, run:
+### Steps
+1.  **Install dependencies**:
+    ```bash
+    npm install
+    ```
+2.  **Build the extension**:
+    ```bash
+    npm run build
+    ```
+3.  **Install into Foxglove**:
+    ```bash
+    foxglove-extension install
+    ```
+    *Or manually load the `dist` folder in Foxglove Studio (Settings > Extensions).*
 
-```sh
-npm run local-install
-```
+## Topics
 
-Open the Foxglove desktop (or `ctrl-R` to refresh if it is already open). Your extension is installed and available within the app.
+The panel subscribes to the following topics:
+-   `/navigation/thruster/angle` (`{ angle: number }`)
+-   `/navigation/thruster/rpm` (`{ rpm: number }`)
+-   `/automation/state` (`{ enabled: boolean }`)
+-   `/vessel/attitude` (`{ pitch: number, roll: number }`)
 
-## Package
+## Usage
 
-Extensions are packaged into `.foxe` files. These files contain the metadata (package.json) and the build code for the extension.
-
-Before packaging, make sure to set `name`, `publisher`, `version`, and `description` fields in _package.json_. When ready to distribute the extension, run:
-
-```sh
-npm run package
-```
-
-This command will package the extension into a `.foxe` file in the local directory.
-
-## Publish
-
-You can publish the extension to the public registry or privately for your organization.
-
-See documentation here: https://docs.foxglove.dev/docs/visualization/extensions/publish/#packaging-your-extension
+1.  Open the "OpenBridge Demo Panel" in Foxglove Studio.
+2.  **Demo Mode**: By default, the panel runs in Demo Mode. Click "Demo Mode: ON" to switch to Live Data mode.
+3.  **Units**: Click the "Units" button to toggle between Degrees/Radians.
+4.  **Menu**: Click the Apps button (grid icon) in the top right to toggle the navigation menu.
